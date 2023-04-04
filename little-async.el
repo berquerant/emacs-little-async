@@ -6,7 +6,7 @@
 ;; Maintainer: berquerant
 ;; Package-Requires: ((cl-lib "1.0"))
 ;; Created: 19 Apr 2021
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Keywords: async
 ;; URL: https://github.com/berquerant/emacs-little-async
 
@@ -107,6 +107,7 @@ DURATION is not negative, HOOK has no arguments."
   "Insert INPUT into BUFFER if not `little-async-quiet'."
   (unless little-async-quiet
     (with-current-buffer buffer
+      (goto-char (point-max))
       (insert input))))
 
 (defun little-async--default-process-sentinel (process event)
