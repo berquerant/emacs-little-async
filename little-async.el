@@ -6,7 +6,7 @@
 ;; Maintainer: berquerant
 ;; Package-Requires: ((cl-lib "1.0"))
 ;; Created: 19 Apr 2021
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Keywords: async
 ;; URL: https://github.com/berquerant/emacs-little-async
 
@@ -122,8 +122,7 @@ DURATION is not negative, HOOK has no arguments."
       (little-async--insert-buffer pb
                                    (format "%s FINISHED PROCESS: `%s'.\n"
                                            (little-async--to-datetime)
-                                           (little-async--describe-process process))))
-    (display-buffer pb)))
+                                           (little-async--describe-process process))))))
 
 (defun little-async--default-timeout-hook (pname)
   "Kill process of PNAME if active yet."
