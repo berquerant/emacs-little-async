@@ -6,7 +6,7 @@
 ;; Maintainer: berquerant
 ;; Package-Requires: ((cl-lib "1.0"))
 ;; Created: 19 Apr 2021
-;; Version: 0.1.2
+;; Version: 0.2.0
 ;; Keywords: async
 ;; URL: https://github.com/berquerant/emacs-little-async
 
@@ -82,6 +82,11 @@
   :type 'function
   :version "27.2")
 
+(defcustom little-async-default-start-process-stderr-buffer-name "*little-async-start-process-stderr*"
+  "Buffer name of the buffer to accept stderr."
+  :group 'little-async
+  :type 'string)
+
 (defun little-async--to-datetime (&optional time zone)
   "Convert TIME (timestamp) in ZONE (timezone) into string.
 default TIME is now, ZONE is here."
@@ -133,7 +138,7 @@ DURATION is not negative, HOOK has no arguments."
                (little-async--describe-process (get-process pname)))
       (kill-process pname))))
 
-(cl-defun little-async--make-process (command &key process-name buffer-name timeout timeout-hook filter sentinel)
+(cl-defun little-async--make-process (command &key process-name buffer-name timeout timeout-hook filter sentinel stderr)
   "Start process with timeout and return the process.
 
 COMMAND to be executed.
@@ -143,11 +148,13 @@ TIMEOUT is TTL of the process (milliseconds).  Default is `little-async-default-
 TIMEOUT-HOOK is invoked if timeout occurs.  Default is `little-async-default-start-process-timeout-hook'.
 FILTER is process filter.
 SENTINEL is process sentinel.  Default is `little-async-default-start-process-process-sentinel'.
+STDERR is stderr buffer name.  Default is `little-async-default-start-process-stderr-buffer-name'.
 
 See `start-process-shell-command'."
-  (let ((p (start-process-shell-command (or process-name little-async-start-process-process-name)
-                                        (or buffer-name little-async-start-process-buffer-name)
-                                        command))
+  (let ((p (make-process :name (or process-name little-async-start-process-process-name)
+                         :buffer (get-buffer-create (or buffer-name little-async-start-process-buffer-name))
+                         :command command
+                         :stderr (get-buffer-create (or stderr little-async-default-start-process-stderr-buffer-name))))
         (s (or sentinel little-async-default-start-process-process-sentinel))
         (td (/ (or timeout little-async-default-start-process-timeout) 1000.0))
         (th (or timeout-hook little-async-default-start-process-timeout-hook)))
@@ -164,7 +171,7 @@ See `start-process-shell-command'."
     p))
 
 ;;;###autoload
-(cl-defun little-async-start-process (command &key input process-name buffer-name timeout timeout-hook filter sentinel)
+(cl-defun little-async-start-process (command &key input process-name buffer-name timeout timeout-hook filter sentinel stderr)
   "Start process.
 
 INPUT is input string of COMMAND.
@@ -175,7 +182,8 @@ See `little-async--make-process'."
                                        :timeout timeout
                                        :timeout-hook timeout-hook
                                        :filter filter
-                                       :sentinel sentinel)))
+                                       :sentinel sentinel
+                                       :stderr stderr)))
     (when input
       (process-send-string p input)
       (when (not (string-match-p "\n$" input))
